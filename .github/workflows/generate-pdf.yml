@@ -1,0 +1,60 @@
+# ============================================================
+#  Generate PDF from PRESENTATION.md
+# ============================================================
+#
+#  This workflow converts PRESENTATION.md into a PDF document
+#  that can be shared with session participants.
+#
+#  The PDF is uploaded as a workflow artifact and can be
+#  downloaded from the Actions tab in GitHub.
+#
+#  Triggers:
+#    - Automatically on push when PRESENTATION.md changes
+#    - Manually via workflow_dispatch at any time
+# ============================================================
+
+name: "📄 Generate Presentation PDF"
+
+permissions:
+  contents: read
+
+on:
+  push:
+    paths:
+      - 'PRESENTATION.md'
+
+  # Allow manual trigger to regenerate the PDF on demand
+  workflow_dispatch:
+
+jobs:
+  generate-pdf:
+    name: Convert PRESENTATION.md to PDF
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install pandoc and LaTeX
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y pandoc texlive-xetex texlive-fonts-recommended texlive-plain-generic
+
+      - name: Convert Markdown to PDF
+        run: |
+          pandoc PRESENTATION.md \
+            --pdf-engine=xelatex \
+            --variable geometry:margin=1in \
+            --variable fontsize=11pt \
+            --variable colorlinks=true \
+            --variable linkcolor=blue \
+            --toc \
+            --toc-depth=2 \
+            -o PRESENTATION.pdf
+
+      - name: Upload PDF artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: presentation-pdf
+          path: PRESENTATION.pdf
+          retention-days: 90
