@@ -1,0 +1,62 @@
+# ============================================================
+#  DEMO: Before Timezone Support (the old UTC-only approach)
+# ============================================================
+#
+#  This workflow demonstrates the problem that existed before
+#  the GitHub Actions March 2026 timezone support release.
+#
+#  The cron below says "0 9 * * 1-5" — which *looks* like
+#  "9 AM on weekdays", but it actually fires at 09:00 UTC.
+#
+#  For a team in US Eastern Time (UTC-5 in winter, UTC-4 in summer):
+#    - In winter (EST): fires at 4:00 AM local time 😬
+#    - In summer (EDT): fires at 5:00 AM local time 😬
+#
+#  Developers had to manually do UTC math — and update the
+#  cron twice a year to account for Daylight Saving Time.
+#
+#  NOTE: This workflow is a demonstration artifact only.
+#        See demo-with-timezone.yml for the improved approach.
+# ============================================================
+
+name: "❌ Demo — Before Timezone Support (UTC Only)"
+
+permissions: {}
+
+on:
+  schedule:
+    # Intended: "9 AM weekdays" — but this is 09:00 UTC
+    # A US Eastern team would need to write '0 14 * * 1-5' in winter
+    # and '0 13 * * 1-5' in summer to actually get 9 AM ET.
+    - cron: '0 9 * * 1-5'
+
+  # Allow manual trigger for demo purposes
+  workflow_dispatch:
+
+jobs:
+  show-utc-problem:
+    name: Show UTC-Only Limitation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Show current UTC time
+        run: |
+          echo "=============================================="
+          echo "  BEFORE: UTC-Only Schedule (Old Approach)"
+          echo "=============================================="
+          echo ""
+          echo "  Cron expression:   0 9 * * 1-5"
+          echo "  Timezone assumed:  UTC (no choice!)"
+          echo ""
+          echo "  Current UTC time:  $(date -u)"
+          echo ""
+          echo "  If your team is in US Eastern Time:"
+          echo "    - Winter (EST, UTC-5): this fires at 4:00 AM local 😬"
+          echo "    - Summer (EDT, UTC-4): this fires at 5:00 AM local 😬"
+          echo ""
+          echo "  To get 9 AM Eastern, you'd need to write:"
+          echo "    - Winter: '0 14 * * 1-5'  (9 AM EST = 14:00 UTC)"
+          echo "    - Summer: '0 13 * * 1-5'  (9 AM EDT = 13:00 UTC)"
+          echo ""
+          echo "  ...and manually update twice a year for DST. 😩"
+          echo "=============================================="

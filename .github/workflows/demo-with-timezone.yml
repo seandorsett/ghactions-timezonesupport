@@ -1,0 +1,74 @@
+# ============================================================
+#  DEMO: With Timezone Support (the new March 2026 approach)
+# ============================================================
+#
+#  This workflow demonstrates the GitHub Actions timezone
+#  support feature released in March 2026.
+#
+#  The new `timezone` field under a cron schedule entry
+#  lets you specify an IANA timezone name. GitHub Actions
+#  will automatically convert to UTC and handle Daylight
+#  Saving Time adjustments for you.
+#
+#  This workflow fires at exactly 9:00 AM New York time,
+#  weekdays — no manual UTC math, no DST headaches.
+# ============================================================
+
+name: "✅ Demo — With Timezone Support"
+
+permissions: {}
+
+on:
+  schedule:
+    # Fires at 9:00 AM New York time (America/New_York) on weekdays.
+    # GitHub Actions automatically handles EST/EDT transitions.
+    - cron: '0 9 * * 1-5'
+      timezone: 'America/New_York'   # ← NEW in March 2026!
+
+  # Allow manual trigger for demo purposes
+  workflow_dispatch:
+
+jobs:
+  show-timezone-support:
+    name: Show Timezone-Aware Schedule
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Display timezone-aware schedule info
+        run: |
+          echo "=============================================="
+          echo "  AFTER: Timezone-Aware Schedule (New Approach)"
+          echo "=============================================="
+          echo ""
+          echo "  Cron expression:   0 9 * * 1-5"
+          echo "  Timezone:          America/New_York  ← explicit!"
+          echo ""
+          echo "  Current UTC time (runner):  $(date -u)"
+          echo ""
+          echo "  This workflow fires at 9:00 AM Eastern Time,"
+          echo "  regardless of DST. GitHub handles the conversion."
+          echo ""
+          echo "  In winter (EST, UTC-5): GitHub fires at 14:00 UTC"
+          echo "  In summer (EDT, UTC-4): GitHub fires at 13:00 UTC"
+          echo ""
+          echo "  Your team just writes '9 AM' and it works. ✅"
+          echo "=============================================="
+
+      - name: Confirm IANA timezone standard
+        run: |
+          echo ""
+          echo "  IANA Timezone Reference:"
+          echo "  ─────────────────────────────────────────────"
+          echo "  America/New_York    → US Eastern"
+          echo "  America/Chicago     → US Central"
+          echo "  America/Denver      → US Mountain"
+          echo "  America/Los_Angeles → US Pacific"
+          echo "  Europe/London       → UK / Ireland"
+          echo "  Europe/Berlin       → Central Europe"
+          echo "  Asia/Kolkata        → India"
+          echo "  Asia/Tokyo          → Japan"
+          echo "  Australia/Sydney    → Australia Eastern"
+          echo "  UTC                 → UTC (same as before)"
+          echo "  ─────────────────────────────────────────────"
+          echo "  Same format used in Linux, databases, and code."
+          echo ""
