@@ -12,6 +12,7 @@ released in [GitHub Actions Late March 2026 Updates](https://github.blog/changel
 |---|---|
 | [`PRESENTATION.md`](./PRESENTATION.md) | Full slide deck with speaker notes (10 min presentation + 10 min demo guide + crafted Q&A) |
 | [`DEMO.md`](./DEMO.md) | Step-by-step live demo walkthrough |
+| 📄 `PRESENTATION.pdf` | PDF export of the slide deck — generated automatically by the [Generate Presentation PDF](./.github/workflows/generate-pdf.yml) workflow and available as a downloadable artifact from the [Actions tab](../../actions/workflows/generate-pdf.yml) |
 
 ## Demo Workflows
 
