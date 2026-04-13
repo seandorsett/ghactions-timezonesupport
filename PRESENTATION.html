@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GitHub Actions: Timezone Support for Scheduled Workflows</title>
+
+  <!-- Reveal.js CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css" id="theme" />
+
+  <!-- highlight.js for code blocks -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css" />
+
+  <style>
+    /* ── Global overrides ── */
+    :root {
+      --r-heading-font: 'Segoe UI', Arial, sans-serif;
+      --r-main-font:    'Segoe UI', Arial, sans-serif;
+      --r-link-color:   #58a6ff;
+    }
+
+    .reveal h1 { font-size: 1.8em; }
+    .reveal h2 { font-size: 1.4em; color: #aad4f5; }
+    .reveal h3 { font-size: 1.1em; color: #aad4f5; margin-top: 0.4em; }
+
+    /* Code blocks */
+    .reveal pre code { font-size: 0.75em; line-height: 1.5; max-height: 420px; }
+    .reveal pre      { border-radius: 6px; box-shadow: 0 2px 12px rgba(0,0,0,.5); }
+
+    /* Tables */
+    .reveal table {
+      font-size: 0.78em;
+      margin: 0.6em auto;
+      border-collapse: collapse;
+    }
+    .reveal table th { background: #1f4068; padding: 0.4em 0.8em; }
+    .reveal table td { padding: 0.3em 0.8em; border-bottom: 1px solid #444; }
+    .reveal table tr:last-child td { border-bottom: none; }
+
+    /* Highlight chips */
+    .chip {
+      display: inline-block;
+      background: #1f4068;
+      border-radius: 4px;
+      padding: 0.15em 0.5em;
+      font-family: monospace;
+      font-size: 0.85em;
+    }
+
+    /* Pain / Good bullets */
+    .bad  { color: #ff7b7b; }
+    .good { color: #7eff9a; }
+
+    /* Blockquote callout */
+    .reveal blockquote {
+      background: #1a2742;
+      border-left: 4px solid #58a6ff;
+      padding: 0.4em 0.8em;
+      font-size: 0.85em;
+      font-style: normal;
+    }
+
+    /* Section banner */
+    .section-banner {
+      background: linear-gradient(135deg, #1f4068 0%, #0d1f3c 100%);
+      border-radius: 10px;
+      padding: 0.6em 1.2em;
+      font-size: 1em;
+      margin-bottom: 0.4em;
+    }
+
+    /* Agenda table badge */
+    .badge {
+      font-size: 1.1em;
+      margin-right: 0.3em;
+    }
+
+    /* Footer on every slide */
+    .slide-footer {
+      position: fixed;
+      bottom: 8px;
+      left: 16px;
+      font-size: 0.42em;
+      color: #666;
+      z-index: 100;
+    }
+
+    /* Presenter notes styling (shown in speaker view) */
+    .reveal .notes { font-size: 1em; }
+
+    /* Q&A answer box */
+    .answer-box {
+      background: #0d1f3c;
+      border: 1px solid #1f4068;
+      border-radius: 6px;
+      padding: 0.5em 0.8em;
+      margin-top: 0.4em;
+      font-size: 0.82em;
+      text-align: left;
+    }
+  </style>
+</head>
+
+<body>
+<div class="reveal">
+  <div class="slides">
+
+    <!-- ╔══════════════════════════════════════╗
+         ║  TITLE                               ║
+         ╚══════════════════════════════════════╝ -->
+    <section data-background-gradient="linear-gradient(135deg,#0d1f3c 0%,#1a3a5c 100%)">
+      <h1>⏰ GitHub Actions:<br>Timezone Support</h1>
+      <h2 style="color:#7ec8e3;">A FY2026 Feature Release</h2>
+      <p style="font-size:0.75em; color:#aaa;">
+        March 2026 &nbsp;•&nbsp; GitHub Actions Changelog<br>
+        <em>DXC Open Office Hour — GitHub Actions Feature Demo</em>
+      </p>
+      <aside class="notes">
+        Welcome everyone to today's GitHub Actions open office hour with DXC.
+        In the next 20 minutes, we'll explore a newly released feature that makes
+        scheduled workflows much more intuitive — timezone support for
+        <code>schedule</code> triggers. Then we'll open the floor for Q&amp;A.
+        Let's dive in.
+      </aside>
+    </section>
+
+    <!-- ╔══════════════════════════════════════╗
+         ║  AGENDA                              ║
+         ╚══════════════════════════════════════╝ -->
+    <section>
+      <h2>Agenda</h2>
+      <table>
+        <tr><th>Segment</th><th>Time</th></tr>
+        <tr><td><span class="badge">🎯</span> Presentation</td><td>10 min</td></tr>
+        <tr><td><span class="badge">🛠️</span> Live Demo</td><td>10 min</td></tr>
+        <tr><td><span class="badge">❓</span> Open Q&amp;A</td><td>30 min</td></tr>
+        <tr><td><span class="badge">📋</span> Crafted Q&amp;A</td><td>10 min</td></tr>
+        <tr><td><strong>Total</strong></td><td><strong>60 min</strong></td></tr>
+      </table>
+      <aside class="notes">
+        Here's our plan for the hour. We'll start with a focused 10-minute
+        presentation on the new timezone feature, then move into a live demo,
+        followed by open and prepared Q&amp;A sessions.
+      </aside>
+    </section>
+
+    <!-- ══════════════════════════════════════
+         SECTION 1 — PRESENTATION BANNER
+         ══════════════════════════════════════ -->
+    <section data-background="#0d1f3c">
+      <div class="section-banner">
+        <h2 style="margin:0;">Section 1</h2>
+        <p style="margin:0.2em 0 0; font-size:0.9em;">🎯 Presentation — 10 minutes</p>
+      </div>
+      <aside class="notes">
+        Section 1: Presentation. We have 10 minutes to cover the feature clearly
+        and concisely.
+      </aside>
+    </section>
+
+    <!-- ╔══════════════════════════════════════╗
+         ║  SLIDE 2 — THE PROBLEM               ║
+         ╚══════════════════════════════════════╝ -->
+    <section>
+      <h2>📅 Scheduled Workflows: The Old Way</h2>
+      <p style="font-size:0.85em;">Previously, all <code>schedule</code> triggers ran in <strong>UTC only</strong>.</p>
+      <pre><code class="language-yaml" data-trim>
+on:
+  schedule:
+    - cron: '0 9 * * 1-5'   # What time is this for your team?
+      </code></pre>
+      <h3>Pain Points</h3>
+      <ul style="font-size:0.82em;">
+        <li class="bad">❌ Developers had to manually convert local time → UTC</li>
+        <li class="bad">❌ Daylight Saving Time (DST) shifts broke "9 AM" runs</li>
+        <li class="bad">❌ Multi-region teams debugged confusing pipeline fire times</li>
+        <li class="bad">❌ On-call engineers got paged at 3 AM because "9 AM UTC" wasn't what they intended</li>
+      </ul>
+      <aside class="notes">
+        Before this release, every scheduled workflow fired in UTC — full stop.
+        If you wanted a nightly job to run at midnight Eastern Time, you had to
+        mentally (or with a calculator) convert that to 5:00 UTC in winter and
+        4:00 UTC in summer. And if you forgot to account for Daylight Saving
+        Time, your "nightly" job quietly started firing an hour off. This was a
+        common source of confusion for teams spread across time zones.
+      </aside>
+    </section>
+
+    <!-- ╔══════════════════════════════════════╗
+         ║  SLIDE 3 — THE NEW FEATURE           ║
+         ╚══════════════════════════════════════╝ -->
+    <section>
+      <h2>✅ Scheduled Workflows: The New Way</h2>
+      <p style="font-size:0.85em;">GitHub Actions <code>schedule</code> triggers now accept a <code>timezone</code> field!</p>
+      <pre><code class="language-yaml" data-trim>
+on:
+  schedule:
+    - cron: '0 9 * * 1-5'
+      timezone: 'America/New_York'   # ← NEW in March 2026!
+      </code></pre>
+      <h3>What Changed</h3>
+      <ul style="font-size:0.82em;">
+        <li class="good">✅ Specify any <strong>IANA timezone name</strong> (e.g. <code>America/Chicago</code>, <code>Europe/London</code>, <code>Asia/Tokyo</code>)</li>
+        <li class="good">✅ GitHub Actions automatically handles <strong>Daylight Saving Time</strong></li>
+        <li class="good">✅ No more UTC arithmetic for your team</li>
+        <li class="good">✅ Cron expression reads exactly as the team intends it</li>
+      </ul>
+      <aside class="notes">
+        In the March 2026 release, GitHub added a single, elegant field:
+        <code>timezone</code>. You just add it under your <code>cron</code>
+        entry, use any IANA timezone name, and GitHub handles all the UTC
+        conversion and DST adjustments for you. The workflow YAML now reads
+        exactly as your team intended — "run at 9 AM New York time, Monday
+        through Friday."
+      </aside>
+    </section>
+
+    <!-- ╔══════════════════════════════════════╗
+         ║  SLIDE 4 — IANA TIMEZONE NAMES       ║
+         ╚══════════════════════════════════════╝ -->
+    <section>
+      <h2>🌍 IANA Timezone Reference</h2>
+      <p style="font-size:0.8em;">Common timezones your team will use:</p>
+      <table>
+        <tr><th>Region</th><th>IANA Timezone</th></tr>
+        <tr><td>US Eastern</td><td><code>America/New_York</code></td></tr>
+        <tr><td>US Central</td><td><code>America/Chicago</code></td></tr>
+        <tr><td>US Mountain</td><td><code>America/Denver</code></td></tr>
+        <tr><td>US Pacific</td><td><code>America/Los_Angeles</code></td></tr>
+        <tr><td>UK / Ireland</td><td><code>Europe/London</code></td></tr>
+        <tr><td>Central Europe</td><td><code>Europe/Berlin</code> or <code>Europe/Paris</code></td></tr>
+        <tr><td>India</td><td><code>Asia/Kolkata</code></td></tr>
+        <tr><td>Japan</td><td><code>Asia/Tokyo</code></td></tr>
+        <tr><td>Australia East</td><td><code>Australia/Sydney</code></td></tr>
+        <tr><td>UTC (no change)</td><td><code>UTC</code></td></tr>
+      </table>
+      <p style="font-size:0.65em;">Full list: <a href="https://www.iana.org/time-zones">IANA Time Zone Database</a></p>
+      <aside class="notes">
+        The timezone values are standard IANA names — the same ones used in
+        Linux systems, databases, and programming languages. You don't need to
+        learn a new format. If your team already knows "America/New_York" from
+        their cloud infrastructure configs, they already know how to use this
+        feature.
+      </aside>
+    </section>
+
+    <!-- ╔══════════════════════════════════════╗
+         ║  SLIDE 5 — REAL-WORLD USE CASES      ║
+         ╚══════════════════════════════════════╝ -->
+    <section>
+      <h2>💼 Real-World Use Cases</h2>
+
+      <h3>Use Case 1: Business-Hours Nightly Build</h3>
+      <pre><code class="language-yaml" data-trim>
+# Run at 11:30 PM US Central — after business hours, before midnight
+- cron: '30 23 * * 1-5'
+  timezone: 'America/Chicago'
+      </code></pre>
+
+      <h3>Use Case 2: Morning Health Check</h3>
+      <pre><code class="language-yaml" data-trim>
+# Ping production APIs every morning at 8 AM London time
+- cron: '0 8 * * *'
+  timezone: 'Europe/London'
+      </code></pre>
+
+      <h3>Use Case 3: Global Team — Multiple Schedules</h3>
+      <pre><code class="language-yaml" data-trim>
+on:
+  schedule:
+    - cron: '0 9 * * 1-5'
+      timezone: 'America/New_York'     # US team morning run
+    - cron: '0 9 * * 1-5'
+      timezone: 'Asia/Tokyo'           # APAC team morning run
+      </code></pre>
+
+      <aside class="notes">
+        Here are three patterns that come up constantly. The first is a nightly
+        build that needs to run after the US Central business day ends. The
+        second is a morning health check aligned to a London-based SRE team.
+        The third is a multi-region team that wants the same logical schedule —
+        9 AM on a Monday — to fire independently for each region's team.
+        Multiple <code>cron</code> entries under <code>schedule</code> is
+        supported, so you can fan these out cleanly.
+      </aside>
+    </section>
+
+    <!-- ╔══════════════════════════════════════╗
+         ║  SLIDE 6 — KEY TAKEAWAYS             ║
+         ╚══════════════════════════════════════╝ -->
+    <section>
+      <h2>🚀 Key Takeaways</h2>
+      <ol style="font-size:0.85em; line-height:1.8;">
+        <li><strong>One field, zero UTC math</strong> — add <code>timezone:</code> under your cron entry</li>
+        <li><strong>DST is handled automatically</strong> — no seasonal adjustments needed</li>
+        <li><strong>IANA standard</strong> — same format used everywhere in your stack</li>
+        <li><strong>Multiple schedules per workflow</strong> — mix timezones freely</li>
+        <li><strong>Backward compatible</strong> — existing workflows without <code>timezone</code> continue to run in UTC</li>
+      </ol>
+      <blockquote style="margin-top:0.6em;">
+        No migration required. Opt in when it helps your team.
+      </blockquote>
+      <aside class="notes">
+        The five things to remember: it's one field, DST is automatic, it's
+        IANA standard, you can have multiple schedules per workflow, and it is
+        fully backward compatible — nothing breaks if you do nothing. This is a
+        purely additive feature. Encourage your teams to start adding timezones
+        to new scheduled workflows and update existing ones when they cause
+        confusion.
+      </aside>
+    </section>
+
+    <!-- ══════════════════════════════════════
+         SECTION 2 — DEMO BANNER
+         ══════════════════════════════════════ -->
+    <section data-background="#0d1f3c">
+      <div class="section-banner">
+        <h2 style="margin:0;">Section 2</h2>
+        <p style="margin:0.2em 0 0; font-size:0.9em;">🛠️ Live Demo — 10 minutes</p>
+      </div>
+      <aside class="notes">
+        Transition to the live demo. Open your browser and the repository.
+        See DEMO.md for the full step-by-step walkthrough with screenshots.
+      </aside>
+    </section>
+
+    <!-- ╔══════════════════════════════════════╗
+         ║  DEMO FLOW                           ║
+         ╚══════════════════════════════════════╝ -->
+    <section>
+      <h2>🛠️ Demo Flow</h2>
+      <table>
+        <tr><th>Step</th><th>Activity</th><th>Time</th></tr>
+        <tr><td>1</td><td>Open repo — show demo workflows in <code>.github/workflows/</code></td><td>2 min</td></tr>
+        <tr><td>2</td><td>Walk through <code>demo-before-timezone.yml</code> — old UTC-only approach</td><td>2 min</td></tr>
+        <tr><td>3</td><td>Walk through <code>demo-with-timezone.yml</code> — new timezone-aware approach</td><td>2 min</td></tr>
+        <tr><td>4</td><td>Show <code>demo-multi-region.yml</code> — multiple region schedules</td><td>2 min</td></tr>
+        <tr><td>5</td><td>Trigger a workflow run manually — show the Actions tab output</td><td>2 min</td></tr>
+      </table>
+      <p style="font-size:0.65em; margin-top:0.6em;">
+        Full step-by-step walkthrough: <strong>DEMO.md</strong>
+      </p>
+      <aside class="notes">
+        Follow DEMO.md for detailed instructions. Each step is timed at 2 minutes.
+        Keep an eye on the clock and be prepared to abbreviate steps 4 and 5 if
+        needed. The core message — before vs. after — should be clear by step 3.
+      </aside>
+    </section>
+
+    <!-- ══════════════════════════════════════
+         SECTION 3 — OPEN Q&A BANNER
+         ══════════════════════════════════════ -->
+    <section data-background="#0d1f3c">
+      <div class="section-banner">
+        <h2 style="margin:0;">Section 3</h2>
+        <p style="margin:0.2em 0 0; font-size:0.9em;">❓ Open Q&amp;A — 30 minutes</p>
+      </div>
+      <aside class="notes">
+        Open the floor to the audience. 30 minutes of open questions.
+      </aside>
+    </section>
+
+    <!-- ╔══════════════════════════════════════╗
+         ║  Q&A FACILITATION                    ║
+         ╚══════════════════════════════════════╝ -->
+    <section>
+      <h2>❓ Open Q&amp;A</h2>
+      <blockquote style="margin-bottom:0.6em;">
+        "We've got 30 minutes for open questions — anything about timezone
+        support, scheduled workflows, or GitHub Actions broadly. Who wants to
+        go first?"
+      </blockquote>
+      <h3>Common Themes to Anticipate</h3>
+      <ul style="font-size:0.8em;">
+        <li>"Can we use this in GitHub Enterprise Server?"</li>
+        <li>"Does this work with <code>workflow_dispatch</code> triggers too?" <em>(No — only <code>schedule</code>)</em></li>
+        <li>"What happens if I specify an invalid timezone?"</li>
+        <li>"Is there a way to see the next scheduled run time in the UI?"</li>
+        <li>"Can we use <code>env</code> variables for the timezone?"</li>
+      </ul>
+      <h3>Facilitation Tips</h3>
+      <ul style="font-size:0.8em;">
+        <li>Repeat questions for the room before answering</li>
+        <li>Park complex questions on a whiteboard/chat for follow-up</li>
+        <li>Invite others to answer before you do</li>
+      </ul>
+      <aside class="notes">
+        Open the floor. Use the suggested opener above. Anticipate the listed
+        questions and use the facilitation tips to keep the session inclusive
+        and on-track. After 30 minutes, transition to Crafted Q&amp;A.
+      </aside>
+    </section>
+
+    <!-- ══════════════════════════════════════
+         SECTION 4 — CRAFTED Q&A BANNER
+         ══════════════════════════════════════ -->
+    <section data-background="#0d1f3c">
+      <div class="section-banner">
+        <h2 style="margin:0;">Section 4</h2>
+        <p style="margin:0.2em 0 0; font-size:0.9em;">📋 Crafted Q&amp;A — 10 minutes</p>
+      </div>
+      <aside class="notes">
+        Crafted Q&A. Five prepared questions with answers. Use these to fill any
+        remaining time or to seed discussion if open Q&A slows down.
+      </aside>
+    </section>
+
+    <!-- ╔══════════════════════════════════════╗
+         ║  Q1 — MINIMAL WORKFLOW               ║
+         ╚══════════════════════════════════════╝ -->
+    <section>
+      <h2>Q1 — Minimal Workflow to Start With</h2>
+      <blockquote>
+        "What's the minimal GitHub Actions workflow we should start with?"
+      </blockquote>
+      <div class="answer-box">
+        Start with a single workflow that runs on <code>push</code> and
+        <code>pull_request</code>, with one job that checks out code and runs
+        tests. Keep it simple, then add stages once the team trusts the basics.
+      </div>
+      <pre><code class="language-yaml" data-trim>
+# .github/workflows/ci.yml
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run tests
+        run: npm test   # or your equivalent
+      </code></pre>
+      <p style="font-size:0.72em;">
+        <strong>Mental model:</strong> triggers → jobs → steps → actions
+      </p>
+      <aside class="notes">
+        Q1 answer: triggers → jobs → steps → actions. Start minimal — one
+        workflow, one job, check out and test. Complexity (build, package,
+        deploy) comes later once the team trusts the basics.
+      </aside>
+    </section>
+
+    <!-- ╔══════════════════════════════════════╗
+         ║  Q2 — WORKFLOW ORGANIZATION          ║
+         ╚══════════════════════════════════════╝ -->
+    <section>
+      <h2>Q2 — Where Should Workflow YAML Live?</h2>
+      <blockquote>
+        "Where should workflow YAML live, and how do we organize it?"
+      </blockquote>
+      <div class="answer-box">
+        Put YAML in <code>.github/workflows/</code>. Use <strong>one workflow per
+        purpose</strong> (CI, nightly, release, deploy), and name them clearly.
+        For larger repos, factor repeated logic into reusable workflows or
+        composite actions.
+      </div>
+      <pre><code class="language-text" data-trim>
+.github/
+  workflows/
+    ci.yml          ← on push / pull_request
+    nightly.yml     ← scheduled build
+    release.yml     ← on tag push
+    deploy.yml      ← on workflow_dispatch or merge to main
+      </code></pre>
+      <p style="font-size:0.72em;">
+        As the repo grows, keep file names self-documenting. Avoid one giant
+        <code>main.yml</code> that does everything.
+      </p>
+      <aside class="notes">
+        Q2 answer: one workflow per purpose, clear file names. .github/workflows/
+        is the only supported location. Resist the urge to consolidate everything
+        into one file.
+      </aside>
+    </section>
+
+    <!-- ╔══════════════════════════════════════╗
+         ║  Q3 — MAINTAINABLE WORKFLOWS         ║
+         ╚══════════════════════════════════════╝ -->
+    <section>
+      <h2>Q3 — Keeping Workflows Maintainable</h2>
+      <blockquote>
+        "How do we keep workflows maintainable as they grow?"
+      </blockquote>
+      <h3>1. Reusable Workflows — shared pipelines across org repos</h3>
+      <pre><code class="language-yaml" data-trim>
+jobs:
+  call-central-ci:
+    uses: my-org/.github/.github/workflows/standard-ci.yml@main
+      </code></pre>
+      <h3>2. Composite Actions — repeated step blocks</h3>
+      <pre><code class="language-yaml" data-trim>
+# .github/actions/setup-node/action.yml
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+    - run: npm ci
+      shell: bash
+      </code></pre>
+      <h3>3. Matrix Builds — OS / version variations</h3>
+      <pre><code class="language-yaml" data-trim>
+strategy:
+  matrix:
+    os: [ubuntu-latest, windows-latest, macos-latest]
+    node: [18, 20, 22]
+      </code></pre>
+      <aside class="notes">
+        Q3 answer: three patterns. Reusable workflows for org-wide shared
+        pipelines. Composite actions for repeated step blocks. Matrix builds to
+        avoid YAML duplication across OS and language version combinations.
+      </aside>
+    </section>
+
+    <!-- ╔══════════════════════════════════════╗
+         ║  Q4 — ACTION VS WORKFLOW             ║
+         ╚══════════════════════════════════════╝ -->
+    <section>
+      <h2>Q4 — Action vs. Workflow</h2>
+      <blockquote>
+        "What's the difference between an Action and a workflow?"
+      </blockquote>
+      <table style="margin-bottom:0.4em;">
+        <tr><th>Concept</th><th>What it is</th><th>Where it lives</th></tr>
+        <tr><td><strong>Workflow</strong></td><td>The YAML pipeline definition</td><td><code>.github/workflows/*.yml</code></td></tr>
+        <tr><td><strong>Action</strong></td><td>A reusable unit called inside steps</td><td>Marketplace, a repo, or local path</td></tr>
+      </table>
+      <pre><code class="language-yaml" data-trim>
+jobs:
+  build:
+    steps:
+      - uses: actions/checkout@v4        # ← this is an Action
+      - uses: actions/setup-node@v4      # ← this is an Action
+      - run: npm test                    # ← this is a step (shell command)
+      </code></pre>
+      <blockquote>
+        <strong>One-liner:</strong> Workflows <em>orchestrate</em>; actions <em>do work</em>.
+      </blockquote>
+      <aside class="notes">
+        Q4 answer: workflows orchestrate, actions do work. Workflows are the
+        YAML files in .github/workflows/. Actions are the reusable building
+        blocks called via <code>uses:</code> — from the Marketplace, another
+        repo, or a local path.
+      </aside>
+    </section>
+
+    <!-- ╔══════════════════════════════════════╗
+         ║  Q5 — SLOW PIPELINES                 ║
+         ╚══════════════════════════════════════╝ -->
+    <section>
+      <h2>Q5 — Slow Pipelines &amp; Long Queues</h2>
+      <blockquote>
+        "How do we stop long queues / slow pipelines?"
+      </blockquote>
+      <h3>1. Right-size job parallelism</h3>
+      <pre><code class="language-yaml" data-trim>
+jobs:
+  lint:    { ... }   # runs in parallel
+  test:    { ... }   # runs in parallel
+  build:             # runs after lint + test
+    needs: [lint, test]
+      </code></pre>
+      <h3>2. Use caching</h3>
+      <pre><code class="language-yaml" data-trim>
+- uses: actions/cache@v4
+  with:
+    path: ~/.npm
+    key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+      </code></pre>
+      <h3>3. Avoid rebuilding</h3>
+      <p style="font-size:0.78em;">
+        Pass compiled artifacts between jobs using
+        <code>upload-artifact</code> / <code>download-artifact</code>
+        instead of rebuilding in each job.
+      </p>
+      <aside class="notes">
+        Q5 answer: three levers. First, split independent work into parallel
+        jobs. Second, cache dependencies so you're not reinstalling on every
+        run. Third, use artifacts to pass build outputs between jobs instead of
+        rebuilding everything from scratch downstream.
+      </aside>
+    </section>
+
+    <!-- ╔══════════════════════════════════════╗
+         ║  CLOSING                             ║
+         ╚══════════════════════════════════════╝ -->
+    <section data-background-gradient="linear-gradient(135deg,#0d1f3c 0%,#1a3a5c 100%)">
+      <h2>🎉 Thank You!</h2>
+      <p style="font-size:0.85em; margin-top:0.8em;">
+        <strong>Feature reference:</strong><br>
+        <a href="https://github.blog/changelog/2026-03-19-github-actions-late-march-2026-updates/">
+          GitHub Actions Late March 2026 Updates
+        </a>
+      </p>
+      <p style="font-size:0.8em; margin-top:0.6em;">
+        See <strong>DEMO.md</strong> for the full live-demo walkthrough.<br>
+        See <strong>PRESENTATION.md</strong> for the complete session guide.
+      </p>
+      <p style="font-size:0.65em; color:#aaa; margin-top:1em;">
+        Presentation prepared for DXC GitHub Actions Open Office Hour
+      </p>
+      <aside class="notes">
+        Wrap up the session. Thank the audience. Point them to the GitHub
+        changelog for the official feature announcement and to DEMO.md for the
+        full walkthrough guide they can use independently.
+      </aside>
+    </section>
+
+  </div><!-- /.slides -->
+</div><!-- /.reveal -->
+
+<!-- Reveal.js runtime -->
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/markdown/markdown.js"></script>
+
+<script>
+  Reveal.initialize({
+    hash: true,
+    slideNumber: 'c/t',
+    progress: true,
+    controls: true,
+    center: true,
+    transition: 'slide',
+    transitionSpeed: 'default',
+    backgroundTransition: 'fade',
+    plugins: [ RevealNotes, RevealHighlight, RevealMarkdown ],
+    // Keyboard shortcuts reminder shown in speaker view
+    keyboard: {
+      // 's' opens speaker notes — built-in Reveal.js shortcut
+    }
+  });
+</script>
+
+<!-- Persistent footer -->
+<div class="slide-footer">
+  GitHub Actions: Timezone Support &nbsp;|&nbsp; DXC Open Office Hour &nbsp;|&nbsp; Press <kbd>S</kbd> for speaker notes
+</div>
+
+</body>
+</html>
