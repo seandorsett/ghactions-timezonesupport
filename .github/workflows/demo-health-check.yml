@@ -1,0 +1,71 @@
+# ============================================================
+#  DEMO: Morning Health Check — Practical Example
+# ============================================================
+#
+#  A real-world use case: ping production API endpoints
+#  every morning at 8:00 AM London time so the UK SRE team
+#  has a fresh status report at the start of their day.
+#
+#  Before timezone support, the SRE team had to remember:
+#    - BST (British Summer Time, UTC+1): write '0 7 * * *'
+#    - GMT (Greenwich Mean Time, UTC+0): write '0 8 * * *'
+#    ...and update the cron twice a year.
+#
+#  Now they just write timezone: 'Europe/London' and it works.
+# ============================================================
+
+name: "✅ Demo — Morning Health Check (London Time)"
+
+permissions: {}
+
+on:
+  schedule:
+    # Fires at 8:00 AM London time every day.
+    # GitHub handles BST (UTC+1) vs GMT (UTC+0) automatically.
+    - cron: '0 8 * * *'
+      timezone: 'Europe/London'
+
+  # Allow manual trigger for demo purposes
+  workflow_dispatch:
+
+jobs:
+  health-check:
+    name: Morning Health Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Display health check context
+        run: |
+          echo "=============================================="
+          echo "  Morning Health Check — London Time"
+          echo "=============================================="
+          echo "  Schedule: 8:00 AM Europe/London (daily)"
+          echo "  Runner UTC time: $(date -u)"
+          echo "  Purpose: SRE morning status at start of London day"
+          echo "=============================================="
+
+      - name: Simulate API health checks
+        run: |
+          echo ""
+          echo "  Checking production endpoints..."
+          echo ""
+          # In a real workflow, you would use curl or a dedicated
+          # monitoring action here. For demo purposes we simulate:
+          echo "  ✅  /api/health       → 200 OK  (45ms)"
+          echo "  ✅  /api/status       → 200 OK  (32ms)"
+          echo "  ✅  /api/metrics      → 200 OK  (78ms)"
+          echo ""
+          echo "  All endpoints healthy. Good morning, London! ☕"
+          echo ""
+
+      - name: Demonstrate DST handling
+        run: |
+          echo "  DST Note:"
+          echo "  ─────────────────────────────────────────────"
+          echo "  Europe/London observes:"
+          echo "    GMT  (UTC+0): Oct → Mar  → GitHub fires at 08:00 UTC"
+          echo "    BST  (UTC+1): Mar → Oct  → GitHub fires at 07:00 UTC"
+          echo ""
+          echo "  GitHub handles the UTC conversion automatically."
+          echo "  The SRE team always sees results at 8 AM local time."
+          echo "  ─────────────────────────────────────────────"

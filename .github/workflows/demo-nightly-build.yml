@@ -1,0 +1,88 @@
+# ============================================================
+#  DEMO: Nightly Build — Practical Example
+# ============================================================
+#
+#  A real-world use case: run a full integration test suite
+#  and build report every night at 11:30 PM US Central Time,
+#  after business hours, before midnight.
+#
+#  This gives the development team a fresh build report at
+#  the start of their next day.
+#
+#  Without timezone support, this required:
+#    - CST (UTC-6): cron '30 5 * * *'   (05:30 UTC next day)
+#    - CDT (UTC-5): cron '30 4 * * *'   (04:30 UTC next day)
+#    ...and manual updates twice a year.
+#
+#  Now: timezone: 'America/Chicago' handles it automatically.
+# ============================================================
+
+name: "✅ Demo — Nightly Build (US Central Time)"
+
+permissions:
+  contents: read
+
+on:
+  schedule:
+    # Fires at 11:30 PM US Central Time nightly.
+    # GitHub handles CST (UTC-6) vs CDT (UTC-5) automatically.
+    - cron: '30 23 * * *'
+      timezone: 'America/Chicago'
+
+  # Allow manual trigger for demo purposes
+  workflow_dispatch:
+
+jobs:
+  nightly-build:
+    name: Nightly Integration Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Display nightly build context
+        run: |
+          echo "=============================================="
+          echo "  Nightly Build — US Central Time"
+          echo "=============================================="
+          echo "  Schedule:        11:30 PM America/Chicago (nightly)"
+          echo "  Runner UTC time: $(date -u)"
+          echo "  Purpose:         Full integration suite after business hours"
+          echo "=============================================="
+
+      - uses: actions/checkout@v4
+
+      - name: Simulate integration test suite
+        run: |
+          echo ""
+          echo "  Running integration tests..."
+          echo ""
+          echo "  ✅  Unit tests          →  247 passed, 0 failed"
+          echo "  ✅  Integration tests   →   89 passed, 0 failed"
+          echo "  ✅  E2E tests           →   34 passed, 0 failed"
+          echo ""
+          echo "  All 370 tests passed. Nightly build complete. 🎉"
+          echo ""
+
+      - name: Generate build report
+        run: |
+          echo "  Build Report:"
+          echo "  ─────────────────────────────────────────────"
+          echo "  Date (UTC):        $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          echo "  Triggered by:      schedule (America/Chicago — 11:30 PM)"
+          echo "  Tests passed:      370 / 370"
+          echo "  Build status:      SUCCESS ✅"
+          echo "  ─────────────────────────────────────────────"
+          echo ""
+          echo "  Report will be available at the team's daily standup."
+          echo ""
+
+      - name: Demonstrate DST handling
+        run: |
+          echo "  DST Note:"
+          echo "  ─────────────────────────────────────────────"
+          echo "  America/Chicago observes:"
+          echo "    CST (UTC-6): Nov → Mar → GitHub fires at 05:30 UTC"
+          echo "    CDT (UTC-5): Mar → Nov → GitHub fires at 04:30 UTC"
+          echo ""
+          echo "  GitHub handles the UTC conversion automatically."
+          echo "  The team always gets results just before midnight local time."
+          echo "  ─────────────────────────────────────────────"

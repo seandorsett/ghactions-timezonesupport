@@ -1,0 +1,83 @@
+# ============================================================
+#  DEMO: Multi-Region Schedules
+# ============================================================
+#
+#  This workflow demonstrates using multiple `cron` entries,
+#  each with a different `timezone`, to support a global team.
+#
+#  A team with engineers in New York and Tokyo can define
+#  "9 AM start of business day" independently for each region
+#  without any UTC conversion.
+#
+#  Schedule triggers:
+#    - 9:00 AM US Eastern (weekdays) — for the US team
+#    - 9:00 AM Japan Standard Time (weekdays) — for the APAC team
+# ============================================================
+
+name: "✅ Demo — Multi-Region Schedules"
+
+permissions: {}
+
+on:
+  schedule:
+    # US team: fires at 9:00 AM Eastern Time on weekdays
+    - cron: '0 9 * * 1-5'
+      timezone: 'America/New_York'
+
+    # APAC team: fires at 9:00 AM Japan Standard Time on weekdays
+    # JST is UTC+9 and does not observe DST
+    - cron: '0 9 * * 1-5'
+      timezone: 'Asia/Tokyo'
+
+    # EU team: fires at 9:00 AM Central European Time on weekdays
+    - cron: '0 9 * * 1-5'
+      timezone: 'Europe/Berlin'
+
+  # Allow manual trigger for demo purposes
+  workflow_dispatch:
+
+jobs:
+  show-multi-region:
+    name: Show Multi-Region Schedule
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Display multi-region schedule info
+        run: |
+          echo "=============================================="
+          echo "  MULTI-REGION: Global Team Schedule"
+          echo "=============================================="
+          echo ""
+          echo "  Three schedule triggers — all saying '9 AM':"
+          echo ""
+          echo "  1. America/New_York  (US Eastern)"
+          echo "     Weekdays at 9:00 AM ET — for the US team"
+          echo ""
+          echo "  2. Asia/Tokyo  (Japan Standard Time)"
+          echo "     Weekdays at 9:00 AM JST — for the APAC team"
+          echo "     Note: JST is UTC+9, no DST observed"
+          echo ""
+          echo "  3. Europe/Berlin  (Central European Time)"
+          echo "     Weekdays at 9:00 AM CET/CEST — for the EU team"
+          echo ""
+          echo "  Each region gets their own '9 AM Monday' pipeline"
+          echo "  without any UTC gymnastics. ✅"
+          echo ""
+          echo "  Current UTC time (runner): $(date -u)"
+          echo "=============================================="
+
+      - name: Show why this is powerful
+        run: |
+          echo ""
+          echo "  Before timezone support, a global team would have"
+          echo "  to manually calculate UTC offsets for each region:"
+          echo ""
+          echo "  ❌ Old way:"
+          echo "    - cron: '0 14 * * 1-5'   # US ET winter 9 AM (manually calc'd)"
+          echo "    - cron: '0 13 * * 1-5'   # US ET summer 9 AM (manually calc'd)"
+          echo "    - cron: '0 0 * * 1-5'    # Tokyo 9 AM (manually calc'd)"
+          echo "    - cron: '0 8 * * 1-5'    # Berlin winter 9 AM (manually calc'd)"
+          echo "    - cron: '0 7 * * 1-5'    # Berlin summer 9 AM (manually calc'd)"
+          echo ""
+          echo "  ✅ New way: just use timezone: field — GitHub does the math."
+          echo ""
